@@ -3,15 +3,26 @@
     "use strict";
 
 
+    /* =========================================================
+       DADOS
+       ========================================================= */
+
     const PROJECT =
-        window.GDHAGP_PROJECT;
+        window.GDHAGP_PROJECT || {};
 
     const SOURCES =
         window.GDHAGP_SOURCES || [];
 
+    const SOURCE_TEXTS =
+        window.GDHAGP_SOURCE_TEXTS || {};
+
     const ENTRIES =
         window.GDHAGP_ENTRIES || [];
 
+
+    /* =========================================================
+       ELEMENTOS
+       ========================================================= */
 
     const app =
         document.getElementById("app");
@@ -35,6 +46,49 @@
         "Bibliografia"
     ];
 
+
+    /* =========================================================
+       STORAGE
+       ========================================================= */
+
+    function storageGet(storage, key) {
+
+        try {
+
+            return storage.getItem(key);
+
+        }
+        catch {
+
+            return null;
+
+        }
+
+    }
+
+
+    function storageSet(storage, key, value) {
+
+        try {
+
+            storage.setItem(
+                key,
+                value
+            );
+
+        }
+        catch {
+
+            /* file:// pode restringir storage */
+
+        }
+
+    }
+
+
+    /* =========================================================
+       UTILITÁRIOS
+       ========================================================= */
 
     function escapeHtml(value) {
 
@@ -67,8 +121,16 @@
     function sourceById(id) {
 
         return SOURCES.find(
-            source => source.id === id
+            source =>
+                source.id === id
         );
+
+    }
+
+
+    function sourceTextsForEntry(entryId) {
+
+        return SOURCE_TEXTS[entryId] || [];
 
     }
 
@@ -77,25 +139,55 @@
 
         const route =
             decodeURIComponent(
-                location.hash.replace(/^#/, "")
+                location.hash.replace(
+                    /^#/,
+                    ""
+                )
             );
+
 
         return route || "inicio";
 
     }
 
 
+    /* =========================================================
+       TEMA
+       ========================================================= */
+
     function setTheme(theme) {
 
         document.documentElement.dataset.theme =
             theme;
 
-        localStorage.setItem(
+
+        storageSet(
+            localStorage,
             "gdhagp-theme",
             theme
         );
 
-        if (theme === "dark") {
+
+        if (!themeButton) {
+            return;
+        }
+
+
+        if (theme === "light") {
+
+            themeButton.textContent =
+                "☾";
+
+            themeButton.title =
+                "Usar tema escuro";
+
+            themeButton.setAttribute(
+                "aria-label",
+                "Usar tema escuro"
+            );
+
+        }
+        else {
 
             themeButton.textContent =
                 "☀";
@@ -103,14 +195,10 @@
             themeButton.title =
                 "Usar tema claro";
 
-        }
-        else {
-
-            themeButton.textContent =
-                "◐";
-
-            themeButton.title =
-                "Usar tema escuro";
+            themeButton.setAttribute(
+                "aria-label",
+                "Usar tema claro"
+            );
 
         }
 
@@ -120,31 +208,46 @@
     function initializeTheme() {
 
         const storedTheme =
-            localStorage.getItem(
+            storageGet(
+                localStorage,
                 "gdhagp-theme"
             );
 
-        const prefersDark =
-            window.matchMedia &&
-            window.matchMedia(
-                "(prefers-color-scheme: dark)"
-            ).matches;
+
+        /*
+         * Dark azulado é agora o tema padrão
+         * do projeto.
+         */
 
         setTheme(
-            storedTheme ||
-            (
-                prefersDark
-                    ? "dark"
-                    : "light"
-            )
+            storedTheme === "light"
+                ?
+                "light"
+                :
+                "dark"
         );
 
     }
 
 
+    /* =========================================================
+       MENU
+       ========================================================= */
+
     function closeSidebar() {
 
-        sidebar.classList.remove("open");
+        if (
+            !sidebar ||
+            !menuButton
+        ) {
+            return;
+        }
+
+
+        sidebar.classList.remove(
+            "open"
+        );
+
 
         menuButton.setAttribute(
             "aria-expanded",
@@ -159,6 +262,7 @@
         let navigationRoute =
             route.split("/")[0];
 
+
         if (
             navigationRoute ===
             "verbete"
@@ -170,6 +274,7 @@
                         item.id ===
                         route.split("/")[1]
                 );
+
 
             navigationRoute =
                 entry?.language ||
@@ -195,9 +300,11 @@
     }
 
 
-    function renderSearchForm(
-        value = ""
-    ) {
+    /* =========================================================
+       BUSCA
+       ========================================================= */
+
+    function renderSearchForm(value = "") {
 
         return `
 
@@ -212,8 +319,9 @@
                     class="search-input"
                     type="search"
                     value="${escapeHtml(value)}"
-                    placeholder="Buscar lema, transliteração, definição ou acepção…"
+                    placeholder="Buscar lema, transliteração, definição, fonte ou acepção…"
                     aria-label="Buscar no GDHAGP"
+                    autocomplete="off"
                 >
 
                 <button
@@ -237,6 +345,7 @@
                 "search-form"
             );
 
+
         if (!form) {
             return;
         }
@@ -248,26 +357,25 @@
 
                 event.preventDefault();
 
+
                 const input =
                     document.getElementById(
                         "search-input"
                     );
 
+
                 const query =
-                    input.value.trim();
+                    input?.value.trim() ||
+                    "";
 
-                if (!query) {
-
-                    location.hash =
-                        "busca";
-
-                    return;
-
-                }
 
                 location.hash =
-                    "busca/" +
-                    encodeURIComponent(query);
+                    query
+                        ?
+                        "busca/" +
+                        encodeURIComponent(query)
+                        :
+                        "busca";
 
             }
         );
@@ -275,17 +383,74 @@
     }
 
 
+    function entrySourceSearchText(entry) {
+
+        return sourceTextsForEntry(
+            entry.id
+        )
+            .map(record => {
+
+                const source =
+                    sourceById(
+                        record.sourceId
+                    );
+
+
+                return [
+
+                    source?.shortName,
+                    source?.authors,
+                    source?.title,
+
+                    record.location,
+
+                    record.materialType,
+
+                    record.transcriptionStatus,
+
+                    record.originalEntry,
+
+                    record.literalTranslation,
+
+                    record.editorialNote,
+
+                    record.pendingMessage
+
+                ].join(" ");
+
+            })
+            .join(" ");
+
+    }
+
+
     function entrySearchText(entry) {
 
         const definitions =
-            entry.definitions
+            (entry.definitions || [])
                 .map(
-                    definition =>
-                        [
-                            definition.title,
-                            definition.definition,
-                            ...(definition.equivalents || [])
-                        ].join(" ")
+                    definition => [
+
+                        definition.title,
+
+                        definition.definition,
+
+                        ...(definition.equivalents || []),
+
+                        ...(definition.characteristicExpressions || []),
+
+                        ...(definition.notes || [])
+
+                    ].join(" ")
+                )
+                .join(" ");
+
+
+        const analysis =
+            (entry.analysis || [])
+                .map(
+                    item =>
+                        `${item.title} ${item.text}`
                 )
                 .join(" ");
 
@@ -296,10 +461,6 @@
 
             entry.lexicalForm,
 
-            entry.article,
-
-            entry.genitive,
-
             entry.transliteration,
 
             entry.partOfSpeech,
@@ -308,11 +469,19 @@
 
             entry.declension,
 
+            entry.stem,
+
             entry.shortSummary,
+
+            entry.finalSummary,
 
             entry.principalSemiticCorrespondence,
 
-            definitions
+            definitions,
+
+            analysis,
+
+            entrySourceSearchText(entry)
 
         ].join(" ");
 
@@ -326,11 +495,14 @@
 
 
         if (!needle) {
+
             return ENTRIES;
+
         }
 
 
         return ENTRIES
+
             .map(entry => {
 
                 const lemma =
@@ -338,10 +510,12 @@
                         entry.lemma
                     );
 
+
                 const transliteration =
                     normalizeSearch(
                         entry.transliteration
                     );
+
 
                 const content =
                     normalizeSearch(
@@ -356,12 +530,14 @@
                     score += 100;
                 }
 
+
                 if (
                     transliteration ===
                     needle
                 ) {
                     score += 90;
                 }
+
 
                 if (
                     lemma.includes(
@@ -371,6 +547,7 @@
                     score += 60;
                 }
 
+
                 if (
                     transliteration.includes(
                         needle
@@ -378,6 +555,7 @@
                 ) {
                     score += 40;
                 }
+
 
                 if (
                     content.includes(
@@ -413,6 +591,10 @@
     }
 
 
+    /* =========================================================
+       INÍCIO
+       ========================================================= */
+
     function renderHome() {
 
         app.innerHTML = `
@@ -427,19 +609,25 @@
                             Projeto lexicográfico
                         </div>
 
+
                         <h1 class="project-title">
-                            ${escapeHtml(PROJECT.fullName)}
+
+                            ${escapeHtml(
+                                PROJECT.fullName
+                            )}
+
                         </h1>
+
 
                         <p class="lede">
 
-                            Dicionário filológico de longo prazo,
-                            organizado para manter separadas
-                            documentação das fontes,
-                            tradução controlada,
-                            análise e síntese editorial.
+                            ${escapeHtml(
+                                PROJECT.description ||
+                                ""
+                            )}
 
                         </p>
+
 
                         ${renderSearchForm()}
 
@@ -452,7 +640,8 @@
                             Método fundamental
                         </div>
 
-                        ${PROJECT.editorialLayers
+
+                        ${(PROJECT.editorialLayers || [])
                             .map(
                                 (layer, index) => `
 
@@ -465,12 +654,16 @@
                                         <div>
 
                                             <strong>
-                                                ${escapeHtml(layer.label)}
+                                                ${escapeHtml(
+                                                    layer.label
+                                                )}
                                             </strong>
 
                                             <br>
 
-                                            ${escapeHtml(layer.description)}
+                                            ${escapeHtml(
+                                                layer.description
+                                            )}
 
                                         </div>
 
@@ -487,29 +680,47 @@
             </section>
 
 
-            <section class="paper">
+            ${
+                ENTRIES[0]
+                    ?
+                    `
 
-                <div class="eyebrow">
-                    Verbete inaugural
-                </div>
+                    <section class="paper">
 
-                <div class="lemma">
-                    λόγος
-                </div>
+                        <div class="eyebrow">
+                            Verbete inaugural
+                        </div>
 
-                <p class="entry-summary">
-                    ${escapeHtml(
-                        ENTRIES[0]?.shortSummary || ""
-                    )}
-                </p>
+                        <div class="lemma">
 
-                <p>
-                    <a href="#verbete/gr-logos">
-                        Abrir o verbete completo →
-                    </a>
-                </p>
+                            ${escapeHtml(
+                                ENTRIES[0].lemma
+                            )}
 
-            </section>
+                        </div>
+
+                        <p class="entry-summary">
+
+                            ${escapeHtml(
+                                ENTRIES[0].shortSummary
+                            )}
+
+                        </p>
+
+                        <p>
+
+                            <a href="#verbete/${encodeURIComponent(ENTRIES[0].id)}">
+                                Abrir o verbete completo →
+                            </a>
+
+                        </p>
+
+                    </section>
+
+                    `
+                    :
+                    ""
+            }
 
         `;
 
@@ -519,6 +730,10 @@
     }
 
 
+    /* =========================================================
+       BUSCA
+       ========================================================= */
+
     function renderSearch(routeParts) {
 
         const query =
@@ -526,10 +741,13 @@
                 .slice(1)
                 .join("/");
 
+
         const decodedQuery =
             query
-                ? decodeURIComponent(query)
-                : "";
+                ?
+                decodeURIComponent(query)
+                :
+                "";
 
 
         const results =
@@ -552,17 +770,16 @@
 
                 <p class="lede">
 
-                    A pesquisa é executada inteiramente
-                    no navegador e procura lema,
-                    transliteração, metadados,
-                    definições e equivalentes.
+                    A pesquisa inclui verbetes,
+                    definições GDHAGP,
+                    textos documentais das fontes,
+                    traduções e análise.
 
                 </p>
 
                 ${renderSearchForm(
                     decodedQuery
                 )}
-
 
                 <div class="search-results">
 
@@ -579,23 +796,37 @@
                                         >
 
                                             <div class="search-result-lemma">
-                                                ${escapeHtml(entry.lemma)}
+
+                                                ${escapeHtml(
+                                                    entry.lemma
+                                                )}
+
                                             </div>
 
                                             <div>
 
                                                 <em>
-                                                    ${escapeHtml(entry.transliteration)}
+
+                                                    ${escapeHtml(
+                                                        entry.transliteration
+                                                    )}
+
                                                 </em>
 
                                                 ·
 
-                                                ${escapeHtml(entry.partOfSpeech)}
+                                                ${escapeHtml(
+                                                    entry.partOfSpeech
+                                                )}
 
                                             </div>
 
                                             <div class="search-result-meta">
-                                                ${escapeHtml(entry.shortSummary)}
+
+                                                ${escapeHtml(
+                                                    entry.shortSummary
+                                                )}
+
                                             </div>
 
                                         </a>
@@ -625,28 +856,45 @@
     }
 
 
-    function renderLanguage(
-        language
-    ) {
+    /* =========================================================
+       IDIOMAS
+       ========================================================= */
+
+    function renderLanguage(language) {
 
         const labels = {
 
             grego: {
-                title: "Grego",
-                sample: "λόγος",
-                className: "greek"
+                title:
+                    "Grego",
+
+                sample:
+                    "λόγος",
+
+                className:
+                    "greek"
             },
 
             hebraico: {
-                title: "Hebraico",
-                sample: "דָּבָר",
-                className: "hebrew"
+                title:
+                    "Hebraico",
+
+                sample:
+                    "דָּבָר",
+
+                className:
+                    "hebrew"
             },
 
             aramaico: {
-                title: "Aramaico",
-                sample: "מִלָּה",
-                className: "hebrew"
+                title:
+                    "Aramaico",
+
+                sample:
+                    "מִלָּה",
+
+                className:
+                    "hebrew"
             }
 
         };
@@ -678,7 +926,9 @@
                                 ${configuration.className}
                             "
                         >
+
                             ${configuration.sample}
+
                         </div>
 
                         <h1>
@@ -690,7 +940,7 @@
                             ${
                                 entries.length
                                     ?
-                                    `${entries.length} verbete(s) disponível(is) nesta versão.`
+                                    `${entries.length} verbete(s) disponível(is).`
                                     :
                                     "Seção preparada para expansão futura."
                             }
@@ -702,48 +952,48 @@
                 </div>
 
 
-                ${
-                    entries.length
-                        ?
+                ${entries
+                    .map(
+                        entry => `
+
+                            <a
+                                class="search-result"
+                                href="#verbete/${entry.id}"
+                            >
+
+                                <div class="search-result-lemma">
+
+                                    ${escapeHtml(
+                                        entry.lemma
+                                    )}
+
+                                </div>
+
+                                <div>
+
+                                    <em>
+
+                                        ${escapeHtml(
+                                            entry.transliteration
+                                        )}
+
+                                    </em>
+
+                                </div>
+
+                                <div class="search-result-meta">
+
+                                    ${escapeHtml(
+                                        entry.shortSummary
+                                    )}
+
+                                </div>
+
+                            </a>
+
                         `
-
-                        <div class="search-results">
-
-                            ${entries
-                                .map(
-                                    entry => `
-
-                                    <a
-                                        class="search-result"
-                                        href="#verbete/${entry.id}"
-                                    >
-
-                                        <div class="search-result-lemma">
-                                            ${escapeHtml(entry.lemma)}
-                                        </div>
-
-                                        <div>
-                                            <em>
-                                                ${escapeHtml(entry.transliteration)}
-                                            </em>
-                                        </div>
-
-                                        <div class="search-result-meta">
-                                            ${escapeHtml(entry.shortSummary)}
-                                        </div>
-
-                                    </a>
-
-                                    `
-                                )
-                                .join("")}
-
-                        </div>
-
-                        `
-                        :
-                        ""
-                }
+                    )
+                    .join("")}
 
             </section>
 
@@ -752,6 +1002,10 @@
     }
 
 
+    /* =========================================================
+       PÁGINA DE FONTES
+       ========================================================= */
+
     function renderSourcesPage() {
 
         app.innerHTML = `
@@ -759,7 +1013,7 @@
             <section class="paper">
 
                 <div class="eyebrow">
-                    Documentação
+                    Corpus lexicográfico
                 </div>
 
                 <h1>
@@ -768,11 +1022,10 @@
 
                 <p class="lede">
 
-                    Cada fonte lexicográfica permanece
-                    independente.
-                    O GDHAGP não cria uma fonte composta
-                    artificial pela fusão silenciosa
-                    de léxicos diferentes.
+                    Cada fonte é documentada
+                    independentemente.
+                    O GDHAGP não funde silenciosamente
+                    léxicos distintos.
 
                 </p>
 
@@ -784,23 +1037,56 @@
                             <article class="source-card">
 
                                 <h3>
-                                    ${escapeHtml(source.shortName)}
+
+                                    ${escapeHtml(
+                                        source.shortName
+                                    )}
+
                                 </h3>
+
 
                                 <div class="source-meta">
 
                                     <span>
-                                        ${escapeHtml(source.material)}
+
+                                        ${escapeHtml(
+                                            source.material
+                                        )}
+
                                     </span>
 
                                     <span>
-                                        ${escapeHtml(source.scope)}
+
+                                        ${escapeHtml(
+                                            source.scope
+                                        )}
+
                                     </span>
 
                                     ${
                                         source.year
                                             ?
-                                            `<span>${source.year}</span>`
+                                            `
+                                            <span>
+                                                ${source.year}
+                                            </span>
+                                            `
+                                            :
+                                            ""
+                                    }
+
+                                    ${
+                                        source.onlineProvider
+                                            ?
+                                            `
+                                            <span>
+
+                                                ${escapeHtml(
+                                                    source.onlineProvider
+                                                )}
+
+                                            </span>
+                                            `
                                             :
                                             ""
                                     }
@@ -811,39 +1097,55 @@
                                 <p>
 
                                     <strong>
-                                        ${escapeHtml(source.authors)}
+
+                                        ${escapeHtml(
+                                            source.authors
+                                        )}
+
                                     </strong>
 
                                     <br>
 
                                     <em>
-                                        ${escapeHtml(source.title)}
-                                    </em>
 
-                                    ${
-                                        source.edition
-                                            ?
-                                            `, ${escapeHtml(source.edition)}`
-                                            :
-                                            ""
-                                    }
+                                        ${escapeHtml(
+                                            source.title
+                                        )}
+
+                                    </em>
 
                                 </p>
 
 
-                                <ul>
+                                ${
+                                    source.notes?.length
+                                        ?
+                                        `
 
-                                    ${(source.notes || [])
-                                        .map(
-                                            note => `
-                                                <li>
-                                                    ${escapeHtml(note)}
-                                                </li>
-                                            `
-                                        )
-                                        .join("")}
+                                        <ul>
 
-                                </ul>
+                                            ${source.notes
+                                                .map(
+                                                    note => `
+
+                                                        <li>
+
+                                                            ${escapeHtml(
+                                                                note
+                                                            )}
+
+                                                        </li>
+
+                                                    `
+                                                )
+                                                .join("")}
+
+                                        </ul>
+
+                                        `
+                                        :
+                                        ""
+                                }
 
                             </article>
 
@@ -857,6 +1159,10 @@
 
     }
 
+
+    /* =========================================================
+       MÉTODO
+       ========================================================= */
 
     function renderMethod() {
 
@@ -872,35 +1178,36 @@
                     Método
                 </h1>
 
-                <p class="lede">
-
-                    O GDHAGP foi concebido para impedir
-                    que dados documentais,
-                    traduções,
-                    análises e decisões editoriais
-                    sejam confundidos.
-
-                </p>
-
 
                 <div class="method-grid">
 
-                    ${PROJECT.editorialLayers
+                    ${(PROJECT.editorialLayers || [])
                         .map(
                             (layer, index) => `
 
                                 <article class="method-card">
 
                                     <div class="eyebrow">
-                                        Camada ${index + 1}
+
+                                        Camada
+                                        ${index + 1}
+
                                     </div>
 
                                     <h3>
-                                        ${escapeHtml(layer.label)}
+
+                                        ${escapeHtml(
+                                            layer.label
+                                        )}
+
                                     </h3>
 
                                     <p>
-                                        ${escapeHtml(layer.description)}
+
+                                        ${escapeHtml(
+                                            layer.description
+                                        )}
+
                                     </p>
 
                                 </article>
@@ -915,51 +1222,21 @@
                 <hr class="rule">
 
 
-                <div class="notice">
+                ${(PROJECT.principles || [])
+                    .map(
+                        principle => `
 
-                    <strong>
-                        Independência das fontes.
-                    </strong>
+                            <div class="notice">
 
-                    BDAG,
-                    Lust–Eynikel–Hauspie,
-                    Robinson,
-                    Thayer
-                    e quaisquer fontes futuras
-                    são documentados separadamente.
+                                ${escapeHtml(
+                                    principle
+                                )}
 
-                </div>
+                            </div>
 
-
-                <div class="notice">
-
-                    <strong>
-                        Sem reconstrução fictícia.
-                    </strong>
-
-                    Uma fonte em scan
-                    não recebe transcrição diplomática
-                    até que tal transcrição
-                    tenha sido efetivamente realizada
-                    e conferida.
-
-                </div>
-
-
-                <div class="notice">
-
-                    <strong>
-                        Distinção epistemológica.
-                    </strong>
-
-                    Fato documental,
-                    tradução,
-                    inferência,
-                    hipótese
-                    e decisão editorial
-                    devem permanecer identificáveis.
-
-                </div>
+                        `
+                    )
+                    .join("")}
 
             </section>
 
@@ -968,9 +1245,11 @@
     }
 
 
-    function renderGeneralEntry(
-        entry
-    ) {
+    /* =========================================================
+       ENTRADA GERAL
+       ========================================================= */
+
+    function renderGeneralEntry(entry) {
 
         const fields = [
 
@@ -1050,20 +1329,35 @@
                     Entrada geral
                 </div>
 
+
                 <div class="general-fields">
 
                     ${fields
+                        .filter(
+                            field =>
+                                field[1] !== undefined &&
+                                field[1] !== null &&
+                                field[1] !== ""
+                        )
                         .map(
                             field => `
 
                                 <div class="general-field">
 
                                     <span class="general-field-label">
-                                        ${escapeHtml(field[0])}
+
+                                        ${escapeHtml(
+                                            field[0]
+                                        )}
+
                                     </span>
 
                                     <span>
-                                        ${escapeHtml(field[1])}
+
+                                        ${escapeHtml(
+                                            field[1]
+                                        )}
+
                                     </span>
 
                                 </div>
@@ -1074,6 +1368,37 @@
 
                 </div>
 
+
+                ${
+                    entry.frequencyNotes?.length
+                        ?
+                        `
+
+                        <div class="pills">
+
+                            ${entry.frequencyNotes
+                                .map(
+                                    note => `
+
+                                        <span class="pill">
+
+                                            ${escapeHtml(
+                                                note
+                                            )}
+
+                                        </span>
+
+                                    `
+                                )
+                                .join("")}
+
+                        </div>
+
+                        `
+                        :
+                        ""
+                }
+
             </section>
 
         `;
@@ -1081,23 +1406,30 @@
     }
 
 
-    function renderDefinitions(
-        entry
-    ) {
+    /* =========================================================
+       DEFINIÇÕES
+       ========================================================= */
+
+    function renderDefinitions(entry) {
+
+        const definitions =
+            entry.definitions ||
+            [];
+
 
         return `
 
             <div class="definitions-introduction">
 
-                Cada acepção abaixo constitui
-                uma unidade lexicográfica independente.
-                O resumo global aparece apenas
-                ao final da seção.
+                Cada acepção constitui uma unidade
+                lexicográfica independente.
+                O resumo conjunto aparece somente
+                ao final.
 
             </div>
 
 
-            ${entry.definitions
+            ${definitions
                 .map(
                     definition => `
 
@@ -1106,11 +1438,17 @@
                             <header class="definition-heading">
 
                                 <span class="definition-number">
+
                                     ${definition.number}.
+
                                 </span>
 
                                 <h3 class="definition-title">
-                                    ${escapeHtml(definition.title)}
+
+                                    ${escapeHtml(
+                                        definition.title
+                                    )}
+
                                 </h3>
 
                             </header>
@@ -1123,7 +1461,11 @@
                                 </div>
 
                                 <p>
-                                    ${escapeHtml(definition.definition)}
+
+                                    ${escapeHtml(
+                                        definition.definition
+                                    )}
+
                                 </p>
 
                             </div>
@@ -1137,16 +1479,17 @@
                                     <div class="definition-section">
 
                                         <div class="definition-label">
-                                            Equivalentes principais
+                                            Equivalentes
                                         </div>
 
                                         <p>
+
                                             ${definition.equivalents
                                                 .map(
-                                                    value =>
-                                                        escapeHtml(value)
+                                                    escapeHtml
                                                 )
                                                 .join("; ")}
+
                                         </p>
 
                                     </div>
@@ -1169,12 +1512,13 @@
                                         </div>
 
                                         <p class="greek">
+
                                             ${definition.characteristicExpressions
                                                 .map(
-                                                    value =>
-                                                        escapeHtml(value)
+                                                    escapeHtml
                                                 )
                                                 .join(" · ")}
+
                                         </p>
 
                                     </div>
@@ -1203,16 +1547,27 @@
                                                     <div class="example">
 
                                                         <div class="example-reference">
-                                                            ➥ ${escapeHtml(example.reference)}
+
+                                                            ➥
+                                                            ${escapeHtml(
+                                                                example.reference
+                                                            )}
+
                                                         </div>
 
                                                         ${
                                                             example.greek
                                                                 ?
                                                                 `
+
                                                                 <div class="greek">
-                                                                    ${escapeHtml(example.greek)}
+
+                                                                    ${escapeHtml(
+                                                                        example.greek
+                                                                    )}
+
                                                                 </div>
+
                                                                 `
                                                                 :
                                                                 ""
@@ -1222,9 +1577,15 @@
                                                             example.translation
                                                                 ?
                                                                 `
+
                                                                 <div>
-                                                                    “${escapeHtml(example.translation)}”
+
+                                                                    “${escapeHtml(
+                                                                        example.translation
+                                                                    )}”
+
                                                                 </div>
+
                                                                 `
                                                                 :
                                                                 ""
@@ -1245,25 +1606,31 @@
 
 
                             ${
-                                definition.notes?.length
+                                definition.sources?.length
                                     ?
                                     `
 
                                     <div class="definition-section">
 
                                         <div class="definition-label">
-                                            Notas
+                                            Fontes de apoio
                                         </div>
 
-                                        ${definition.notes
-                                            .map(
-                                                note => `
-                                                    <p>
-                                                        ${escapeHtml(note)}
-                                                    </p>
-                                                `
-                                            )
-                                            .join("")}
+                                        <p>
+
+                                            ${definition.sources
+                                                .map(
+                                                    sourceId =>
+                                                        escapeHtml(
+                                                            sourceById(
+                                                                sourceId
+                                                            )?.shortName ||
+                                                            sourceId
+                                                        )
+                                                )
+                                                .join(" · ")}
+
+                                        </p>
 
                                     </div>
 
@@ -1271,38 +1638,6 @@
                                     :
                                     ""
                             }
-
-
-                            <div class="definition-section">
-
-                                <div class="definition-label">
-                                    Fontes de apoio
-                                </div>
-
-                                <p>
-
-                                    ${(definition.sources || [])
-                                        .map(
-                                            sourceId => {
-
-                                                const source =
-                                                    sourceById(sourceId);
-
-                                                return source
-                                                    ?
-                                                    escapeHtml(
-                                                        source.shortName
-                                                    )
-                                                    :
-                                                    escapeHtml(sourceId);
-
-                                            }
-                                        )
-                                        .join(" · ")}
-
-                                </p>
-
-                            </div>
 
                         </article>
 
@@ -1339,18 +1674,24 @@
 
                 <tbody>
 
-                    ${entry.definitions
+                    ${definitions
                         .map(
                             definition => `
 
                                 <tr>
 
                                     <td class="summary-number">
+
                                         ${definition.number}
+
                                     </td>
 
                                     <td>
-                                        ${escapeHtml(definition.title)}
+
+                                        ${escapeHtml(
+                                            definition.title
+                                        )}
+
                                     </td>
 
                                 </tr>
@@ -1364,74 +1705,245 @@
             </table>
 
 
-            <hr class="rule">
+            ${
+                entry.finalSummary
+                    ?
+                    `
 
+                    <hr class="rule">
 
-            <h2>
-                Síntese final
-            </h2>
+                    <h2>
+                        Síntese final
+                    </h2>
 
-            <p>
-                ${escapeHtml(entry.finalSummary)}
-            </p>
+                    <p>
+
+                        ${escapeHtml(
+                            entry.finalSummary
+                        )}
+
+                    </p>
+
+                    `
+                    :
+                    ""
+            }
 
         `;
 
     }
 
 
-    function renderSourceLayers(
-        entry
-    ) {
+    /* =========================================================
+       FONTES
+       ========================================================= */
 
-        return entry.sourceLayers
-            .map(layer => {
+    function renderSourceLayers(entry) {
+
+        const records =
+            sourceTextsForEntry(
+                entry.id
+            );
+
+
+        if (!records.length) {
+
+            return `
+
+                <div class="empty-state">
+                    Nenhuma fonte documental cadastrada.
+                </div>
+
+            `;
+
+        }
+
+
+        return records
+            .map(record => {
 
                 const source =
                     sourceById(
-                        layer.sourceId
+                        record.sourceId
+                    );
+
+
+                const hasText =
+                    Boolean(
+                        record.originalEntry?.trim()
                     );
 
 
                 return `
 
-                    <article class="source-card">
+                    <article class="source-document">
 
-                        <span class="layer-label">
-                            Fonte ·
-                            ${escapeHtml(layer.status)}
-                        </span>
+                        <header class="source-document-header">
 
-                        <h3>
-                            ${escapeHtml(source?.shortName || layer.sourceId)}
-                        </h3>
+                            <div>
 
-                        <p>
-                            ${escapeHtml(layer.summary)}
-                        </p>
+                                <span class="layer-label">
+                                    Fonte integral
+                                </span>
+
+                                <h3 class="source-document-title">
+
+                                    ${escapeHtml(
+                                        source?.shortName ||
+                                        record.sourceId
+                                    )}
+
+                                </h3>
+
+                            </div>
+
+
+                            <div class="source-status">
+
+                                ${
+                                    record.location
+                                        ?
+                                        `
+
+                                        <span>
+
+                                            ${escapeHtml(
+                                                record.location
+                                            )}
+
+                                        </span>
+
+                                        `
+                                        :
+                                        ""
+                                }
+
+                                ${
+                                    record.materialType
+                                        ?
+                                        `
+
+                                        <span>
+
+                                            ${escapeHtml(
+                                                record.materialType
+                                            )}
+
+                                        </span>
+
+                                        `
+                                        :
+                                        ""
+                                }
+
+                                ${
+                                    record.transcriptionStatus
+                                        ?
+                                        `
+
+                                        <span>
+
+                                            ${escapeHtml(
+                                                record.transcriptionStatus
+                                            )}
+
+                                        </span>
+
+                                        `
+                                        :
+                                        ""
+                                }
+
+                            </div>
+
+                        </header>
+
 
                         ${
-                            layer.details?.length
+                            source
                                 ?
                                 `
 
-                                <ul class="source-list">
+                                <div class="source-meta">
 
-                                    ${layer.details
-                                        .map(
-                                            detail => `
-                                                <li>
-                                                    ${escapeHtml(detail)}
-                                                </li>
-                                            `
-                                        )
-                                        .join("")}
+                                    <span>
 
-                                </ul>
+                                        ${escapeHtml(
+                                            source.authors
+                                        )}
+
+                                    </span>
+
+                                    <span>
+
+                                        ${escapeHtml(
+                                            source.title
+                                        )}
+
+                                    </span>
+
+                                </div>
 
                                 `
                                 :
                                 ""
+                        }
+
+
+                        ${
+                            record.editorialNote
+                                ?
+                                `
+
+                                <div class="source-editorial-note">
+
+                                    <strong>
+                                        Nota documental
+                                    </strong>
+
+                                    <p>
+
+                                        ${escapeHtml(
+                                            record.editorialNote
+                                        )}
+
+                                    </p>
+
+                                </div>
+
+                                `
+                                :
+                                ""
+                        }
+
+
+                        ${
+                            hasText
+                                ?
+                                `
+
+                                <div class="source-verbatim">
+
+                                    ${escapeHtml(
+                                        record.originalEntry.trim()
+                                    )}
+
+                                </div>
+
+                                `
+                                :
+                                `
+
+                                <div class="source-pending">
+
+                                    ${escapeHtml(
+                                        record.pendingMessage ||
+                                        "Transcrição integral ainda não incorporada."
+                                    )}
+
+                                </div>
+
+                                `
                         }
 
                     </article>
@@ -1444,53 +1956,152 @@
     }
 
 
-    function renderTranslations(
-        entry
-    ) {
+    /* =========================================================
+       TRADUÇÕES
+       ========================================================= */
 
-        return entry.sourceLayers
-            .map(layer => {
+    function renderTranslations(entry) {
+
+        const records =
+            sourceTextsForEntry(
+                entry.id
+            );
+
+
+        if (!records.length) {
+
+            return `
+
+                <div class="empty-state">
+                    Nenhuma tradução cadastrada.
+                </div>
+
+            `;
+
+        }
+
+
+        return records
+            .map(record => {
 
                 const source =
                     sourceById(
-                        layer.sourceId
+                        record.sourceId
+                    );
+
+
+                const sourceAlreadyPortuguese =
+                    record.translationNotRequired ===
+                    true;
+
+
+                const hasTranslation =
+                    Boolean(
+                        record.literalTranslation?.trim()
                     );
 
 
                 return `
 
-                    <article class="source-card">
+                    <article
+                        class="
+                            source-document
+                            translation-document
+                        "
+                    >
 
-                        <span class="layer-label">
-                            Tradução controlada
-                        </span>
+                        <header class="source-document-header">
 
-                        <h3>
-                            ${escapeHtml(source?.shortName || layer.sourceId)}
-                        </h3>
+                            <div>
 
-                        <ul>
+                                <span class="layer-label">
+                                    Tradução da fonte
+                                </span>
 
-                            ${(layer.controlledTranslation || [])
-                                .map(
-                                    value => `
-                                        <li>
-                                            ${escapeHtml(value)}
-                                        </li>
+                                <h3 class="source-document-title">
+
+                                    ${escapeHtml(
+                                        source?.shortName ||
+                                        record.sourceId
+                                    )}
+
+                                </h3>
+
+                            </div>
+
+
+                            <div class="source-status">
+
+                                <span>
+
+                                    ${
+                                        sourceAlreadyPortuguese
+                                            ?
+                                            "fonte em português"
+                                            :
+                                            escapeHtml(
+                                                record.translationStatus ||
+                                                "em elaboração"
+                                            )
+                                    }
+
+                                </span>
+
+                            </div>
+
+                        </header>
+
+
+                        ${
+                            sourceAlreadyPortuguese
+                                ?
+                                `
+
+                                <div class="source-editorial-note">
+
+                                    <strong>
+                                        Tradução não necessária
+                                    </strong>
+
+                                    <p>
+
+                                        Esta fonte já está redigida
+                                        em português.
+                                        Seu texto original é consultado
+                                        diretamente na aba
+                                        <strong>Fontes</strong>.
+
+                                    </p>
+
+                                </div>
+
+                                `
+                                :
+                                hasTranslation
+                                    ?
                                     `
-                                )
-                                .join("")}
 
-                        </ul>
+                                    <div class="source-verbatim">
 
-                        <p class="source-meta">
+                                        ${escapeHtml(
+                                            record.literalTranslation.trim()
+                                        )}
 
-                            Esta tradução pertence
-                            exclusivamente a esta fonte
-                            e não representa fusão
-                            com os demais léxicos.
+                                    </div>
 
-                        </p>
+                                    `
+                                    :
+                                    `
+
+                                    <div class="source-pending">
+
+                                        A tradução integral desta fonte
+                                        ainda não foi incorporada.
+
+                                    </div>
+
+                                    `
+                        }
 
                     </article>
 
@@ -1502,26 +2113,36 @@
     }
 
 
-    function renderAnalysis(
-        entry
-    ) {
+    /* =========================================================
+       ANÁLISE
+       ========================================================= */
+
+    function renderAnalysis(entry) {
 
         return `
 
             <div class="analysis-grid">
 
-                ${entry.analysis
+                ${(entry.analysis || [])
                     .map(
-                        analysis => `
+                        item => `
 
                             <article class="analysis-card">
 
                                 <h3>
-                                    ${escapeHtml(analysis.title)}
+
+                                    ${escapeHtml(
+                                        item.title
+                                    )}
+
                                 </h3>
 
                                 <p>
-                                    ${escapeHtml(analysis.text)}
+
+                                    ${escapeHtml(
+                                        item.text
+                                    )}
+
                                 </p>
 
                             </article>
@@ -1533,56 +2154,60 @@
             </div>
 
 
-            <hr class="rule">
+            ${
+                entry.lexicalRelations?.length
+                    ?
+                    `
 
+                    <hr class="rule">
 
-            <h2>
-                Relações lexicais
-            </h2>
+                    <h2>
+                        Relações lexicais
+                    </h2>
 
+                    ${entry.lexicalRelations
+                        .map(
+                            relation => `
 
-            ${entry.lexicalRelations
-                .map(
-                    relation => `
+                                <p>
 
-                        <p>
+                                    <strong>
 
-                            <strong class="${
-                                /[\u0370-\u03ff]/u.test(relation.lemma)
-                                    ?
-                                    "greek"
-                                    :
-                                    /[\u0590-\u05ff]/u.test(relation.lemma)
-                                        ?
-                                        "hebrew"
-                                        :
-                                        ""
-                            }">
+                                        ${escapeHtml(
+                                            relation.lemma
+                                        )}
 
-                                ${escapeHtml(relation.lemma)}
+                                    </strong>
 
-                            </strong>
+                                    —
 
-                            —
+                                    ${escapeHtml(
+                                        relation.relation
+                                    )}
 
-                            ${escapeHtml(relation.relation)}
+                                </p>
 
-                        </p>
+                            `
+                        )
+                        .join("")}
 
                     `
-                )
-                .join("")}
+                    :
+                    ""
+            }
 
         `;
 
     }
 
 
-    function renderMorphology(
-        entry
-    ) {
+    /* =========================================================
+       FORMAS
+       ========================================================= */
 
-        function morphologyTable(
+    function renderMorphology(entry) {
+
+        function table(
             title,
             rows
         ) {
@@ -1615,18 +2240,26 @@
 
                         <tbody>
 
-                            ${rows
+                            ${(rows || [])
                                 .map(
                                     row => `
 
                                         <tr>
 
                                             <td>
-                                                ${escapeHtml(row.case)}
+
+                                                ${escapeHtml(
+                                                    row.case
+                                                )}
+
                                             </td>
 
                                             <td>
-                                                ${escapeHtml(row.form)}
+
+                                                ${escapeHtml(
+                                                    row.form
+                                                )}
+
                                             </td>
 
                                         </tr>
@@ -1651,18 +2284,31 @@
             <p>
 
                 <strong>
-                    ${escapeHtml(entry.partOfSpeech)}
-                    ${escapeHtml(entry.gender)}
+
+                    ${escapeHtml(
+                        entry.partOfSpeech
+                    )}
+
+                    ${escapeHtml(
+                        entry.gender
+                    )}
+
                 </strong>
 
                 ·
 
-                ${escapeHtml(entry.declension)}
+                ${escapeHtml(
+                    entry.declension
+                )}
 
                 · tema
 
                 <span class="greek">
-                    ${escapeHtml(entry.stem)}
+
+                    ${escapeHtml(
+                        entry.stem
+                    )}
+
                 </span>
 
             </p>
@@ -1670,14 +2316,14 @@
 
             <div class="morphology-grid">
 
-                ${morphologyTable(
+                ${table(
                     "Singular",
-                    entry.morphology.singular
+                    entry.morphology?.singular
                 )}
 
-                ${morphologyTable(
+                ${table(
                     "Plural",
-                    entry.morphology.plural
+                    entry.morphology?.plural
                 )}
 
             </div>
@@ -1687,11 +2333,13 @@
     }
 
 
-    function renderBibliography(
-        entry
-    ) {
+    /* =========================================================
+       BIBLIOGRAFIA
+       ========================================================= */
 
-        return entry.bibliography
+    function renderBibliography(entry) {
+
+        return (entry.bibliography || [])
             .map(item => {
 
                 const source =
@@ -1705,12 +2353,19 @@
                     <div class="bibliography-item">
 
                         <strong>
-                            ${escapeHtml(source?.shortName || item.sourceId)}
+
+                            ${escapeHtml(
+                                source?.shortName ||
+                                item.sourceId
+                            )}
+
                         </strong>
 
                         <br>
 
-                        ${escapeHtml(item.citation)}
+                        ${escapeHtml(
+                            item.citation
+                        )}
 
                     </div>
 
@@ -1722,6 +2377,10 @@
     }
 
 
+    /* =========================================================
+       ABAS
+       ========================================================= */
+
     function renderTabContent(
         entry,
         tab
@@ -1730,34 +2389,63 @@
         switch (tab) {
 
             case "GDHAGP":
-                return renderDefinitions(entry);
+
+                return renderDefinitions(
+                    entry
+                );
+
 
             case "Fontes":
-                return renderSourceLayers(entry);
+
+                return renderSourceLayers(
+                    entry
+                );
+
 
             case "Tradução":
-                return renderTranslations(entry);
+
+                return renderTranslations(
+                    entry
+                );
+
 
             case "Análise":
-                return renderAnalysis(entry);
+
+                return renderAnalysis(
+                    entry
+                );
+
 
             case "Formas":
-                return renderMorphology(entry);
+
+                return renderMorphology(
+                    entry
+                );
+
 
             case "Bibliografia":
-                return renderBibliography(entry);
+
+                return renderBibliography(
+                    entry
+                );
+
 
             default:
-                return renderDefinitions(entry);
+
+                return renderDefinitions(
+                    entry
+                );
 
         }
 
     }
 
 
-    function renderEntry(
-        id
-    ) {
+    /* =========================================================
+       VERBETE
+       ========================================================= */
+
+    function renderEntry(id) {
 
         const entry =
             ENTRIES.find(
@@ -1776,12 +2464,6 @@
                         Verbete não encontrado
                     </h1>
 
-                    <p>
-                        <a href="#busca">
-                            Voltar à busca
-                        </a>
-                    </p>
-
                 </section>
 
             `;
@@ -1792,12 +2474,16 @@
 
 
         const storedTab =
-            sessionStorage.getItem(
+            storageGet(
+                sessionStorage,
                 `gdhagp-tab-${entry.id}`
             );
 
+
         const initialTab =
-            ENTRY_TABS.includes(storedTab)
+            ENTRY_TABS.includes(
+                storedTab
+            )
                 ?
                 storedTab
                 :
@@ -1813,19 +2499,37 @@
                     <div>
 
                         <div class="eyebrow">
-                            ${escapeHtml(entry.language)} · verbete
+
+                            ${escapeHtml(
+                                entry.language
+                            )}
+
+                            · verbete
+
                         </div>
 
+
                         <div class="lemma">
-                            ${escapeHtml(entry.lemma)}
+
+                            ${escapeHtml(
+                                entry.lemma
+                            )}
+
                         </div>
+
 
                         <div class="entry-meta">
 
                             <span>
+
                                 <strong>
-                                    ${escapeHtml(entry.lexicalForm)}
+
+                                    ${escapeHtml(
+                                        entry.lexicalForm
+                                    )}
+
                                 </strong>
+
                             </span>
 
                             <span>
@@ -1833,9 +2537,15 @@
                             </span>
 
                             <span>
+
                                 <em>
-                                    ${escapeHtml(entry.transliteration)}
+
+                                    ${escapeHtml(
+                                        entry.transliteration
+                                    )}
+
                                 </em>
+
                             </span>
 
                             <span>
@@ -1843,7 +2553,11 @@
                             </span>
 
                             <span>
-                                ${escapeHtml(entry.partOfSpeech)}
+
+                                ${escapeHtml(
+                                    entry.partOfSpeech
+                                )}
+
                             </span>
 
                             <span>
@@ -1851,25 +2565,39 @@
                             </span>
 
                             <span>
-                                ${escapeHtml(entry.gender)}
+
+                                ${escapeHtml(
+                                    entry.gender
+                                )}
+
                             </span>
 
                         </div>
 
 
                         <p class="entry-summary">
-                            ${escapeHtml(entry.shortSummary)}
+
+                            ${escapeHtml(
+                                entry.shortSummary
+                            )}
+
                         </p>
 
 
                         <div class="pills">
 
-                            ${entry.varieties
+                            ${(entry.varieties || [])
                                 .map(
                                     variety => `
+
                                         <span class="pill">
-                                            ${escapeHtml(variety)}
+
+                                            ${escapeHtml(
+                                                variety
+                                            )}
+
                                         </span>
+
                                     `
                                 )
                                 .join("")}
@@ -1902,7 +2630,9 @@
                 </header>
 
 
-                ${renderGeneralEntry(entry)}
+                ${renderGeneralEntry(
+                    entry
+                )}
 
 
                 <div
@@ -1919,7 +2649,7 @@
                                     class="tab"
                                     type="button"
                                     role="tab"
-                                    data-tab="${tab}"
+                                    data-tab="${escapeHtml(tab)}"
                                     aria-selected="${
                                         tab === initialTab
                                             ?
@@ -1928,7 +2658,11 @@
                                             "false"
                                     }"
                                 >
-                                    ${tab}
+
+                                    ${escapeHtml(
+                                        tab
+                                    )}
+
                                 </button>
 
                             `
@@ -1956,7 +2690,9 @@
 
 
         document
-            .querySelectorAll(".tab")
+            .querySelectorAll(
+                ".tab"
+            )
             .forEach(button => {
 
                 button.addEventListener(
@@ -1967,14 +2703,17 @@
                             button.dataset.tab;
 
 
-                        sessionStorage.setItem(
+                        storageSet(
+                            sessionStorage,
                             `gdhagp-tab-${entry.id}`,
                             tab
                         );
 
 
                         document
-                            .querySelectorAll(".tab")
+                            .querySelectorAll(
+                                ".tab"
+                            )
                             .forEach(item => {
 
                                 item.setAttribute(
@@ -1987,13 +2726,21 @@
                             });
 
 
-                        document.getElementById(
-                            "tab-panel"
-                        ).innerHTML =
-                            renderTabContent(
-                                entry,
-                                tab
+                        const panel =
+                            document.getElementById(
+                                "tab-panel"
                             );
+
+
+                        if (panel) {
+
+                            panel.innerHTML =
+                                renderTabContent(
+                                    entry,
+                                    tab
+                                );
+
+                        }
 
                     }
                 );
@@ -2001,75 +2748,86 @@
             });
 
 
-        const copyButton =
-            document.getElementById(
+        document
+            .getElementById(
                 "copy-link-button"
+            )
+            ?.addEventListener(
+                "click",
+                async event => {
+
+                    const button =
+                        event.currentTarget;
+
+
+                    try {
+
+                        await navigator
+                            .clipboard
+                            .writeText(
+                                location.href
+                            );
+
+
+                        button.textContent =
+                            "Link copiado";
+
+                    }
+                    catch {
+
+                        button.textContent =
+                            "Copie pela barra de endereço";
+
+                    }
+
+
+                    setTimeout(
+                        () => {
+
+                            button.textContent =
+                                "Copiar link";
+
+                        },
+                        1600
+                    );
+
+                }
             );
-
-
-        copyButton.addEventListener(
-            "click",
-            async () => {
-
-                try {
-
-                    await navigator.clipboard
-                        .writeText(
-                            location.href
-                        );
-
-                    copyButton.textContent =
-                        "Link copiado";
-
-                }
-                catch {
-
-                    copyButton.textContent =
-                        "Copie pela barra de endereço";
-
-                }
-
-
-                window.setTimeout(
-                    () => {
-
-                        copyButton.textContent =
-                            "Copiar link";
-
-                    },
-                    1500
-                );
-
-            }
-        );
 
 
         document
             .getElementById(
                 "print-button"
             )
-            .addEventListener(
+            ?.addEventListener(
                 "click",
-                () => window.print()
+                () =>
+                    window.print()
             );
 
     }
 
 
+    /* =========================================================
+       ROTEADOR
+       ========================================================= */
+
     function route() {
 
-        const route =
+        const routeValue =
             getRoute();
 
+
         const parts =
-            route.split("/");
+            routeValue.split("/");
+
 
         const base =
             parts[0];
 
 
         setActiveNavigation(
-            route
+            routeValue
         );
 
 
@@ -2084,7 +2842,9 @@
 
             case "busca":
 
-                renderSearch(parts);
+                renderSearch(
+                    parts
+                );
 
                 break;
 
@@ -2133,7 +2893,8 @@
             case "verbete":
 
                 renderEntry(
-                    parts[1] || ""
+                    parts[1] ||
+                    ""
                 );
 
                 break;
@@ -2143,8 +2904,6 @@
 
                 renderHome();
 
-                break;
-
         }
 
 
@@ -2153,51 +2912,66 @@
 
         window.scrollTo({
             top: 0,
-            behavior: "instant"
+            behavior: "auto"
         });
 
     }
 
 
+    /* =========================================================
+       INICIALIZAÇÃO
+       ========================================================= */
+
     initializeTheme();
 
 
-    themeButton.addEventListener(
-        "click",
-        () => {
+    themeButton
+        ?.addEventListener(
+            "click",
+            () => {
 
-            const currentTheme =
-                document.documentElement
-                    .dataset.theme;
-
-            setTheme(
-                currentTheme === "dark"
-                    ?
-                    "light"
-                    :
-                    "dark"
-            );
-
-        }
-    );
+                const current =
+                    document
+                        .documentElement
+                        .dataset
+                        .theme;
 
 
-    menuButton.addEventListener(
-        "click",
-        () => {
-
-            const opened =
-                sidebar.classList.toggle(
-                    "open"
+                setTheme(
+                    current === "dark"
+                        ?
+                        "light"
+                        :
+                        "dark"
                 );
 
-            menuButton.setAttribute(
-                "aria-expanded",
-                String(opened)
-            );
+            }
+        );
 
-        }
-    );
+
+    menuButton
+        ?.addEventListener(
+            "click",
+            event => {
+
+                event.stopPropagation();
+
+
+                const opened =
+                    sidebar
+                        .classList
+                        .toggle(
+                            "open"
+                        );
+
+
+                menuButton.setAttribute(
+                    "aria-expanded",
+                    String(opened)
+                );
+
+            }
+        );
 
 
     document.addEventListener(
@@ -2205,18 +2979,34 @@
         event => {
 
             if (
-                window.innerWidth <= 900
-                &&
+                window.innerWidth <= 900 &&
+                sidebar &&
+                menuButton &&
                 sidebar.classList.contains(
                     "open"
-                )
-                &&
+                ) &&
                 !sidebar.contains(
                     event.target
+                ) &&
+                !menuButton.contains(
+                    event.target
                 )
-                &&
-                event.target !==
-                menuButton
+            ) {
+
+                closeSidebar();
+
+            }
+
+        }
+    );
+
+
+    window.addEventListener(
+        "resize",
+        () => {
+
+            if (
+                window.innerWidth > 900
             ) {
 
                 closeSidebar();

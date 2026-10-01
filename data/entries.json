@@ -13,18 +13,20 @@
       "declension": "segunda declinação",
       "stem": "λογο-",
       "status": "verbete em elaboração",
+      "sourceIds": [
+        "lsj",
+        "bdag",
+        "leh",
+        "robinson",
+        "thayer",
+        "mdn"
+      ],
       "varieties": [
         "grego antigo",
         "grego helenístico",
         "koiné",
         "Septuaginta",
         "Novo Testamento",
-        "literatura cristã antiga"
-      ],
-      "corpora": [
-        "Septuaginta",
-        "Novo Testamento",
-        "literatura judaico-helenística",
         "literatura cristã antiga"
       ],
       "principalSemiticCorrespondence": "דָּבָר",
@@ -128,7 +130,7 @@
           "definition": "Título pessoal aplicado a Jesus Cristo como a Palavra divina eterna que estava com Deus, era Deus e se fez carne."
         }
       ],
-      "finalSummary": "λόγος possui como centro histórico a esfera da expressão e formulação, mas desenvolve uma rede semântica muito ampla. Pode designar desde uma simples palavra ou declaração até discurso, mensagem, relato, ensino, ordem, promessa, texto, assunto e acontecimento; em outro domínio, pode significar consideração, razão, fundamento, cálculo, conta, prestação de contas e registro financeiro. No grego bíblico, especialmente na Septuaginta, sua correspondência frequente com דָּבָר amplia sensivelmente os usos referentes a coisa, matéria e acontecimento. No vocabulário cristão, pode designar a palavra de Deus ou a mensagem do Evangelho e, de modo singular, ὁ Λόγος, a Palavra divina pessoal identificada com Jesus Cristo."
+      "finalSummary": "λόγος possui uma rede semântica extraordinariamente ampla. Pode designar palavra, declaração, fala, discurso, mensagem, relato, ensino, ordem, promessa, texto, assunto e acontecimento; em outros contextos, consideração, razão, fundamento, cálculo, conta e prestação de contas. Na Septuaginta, sua frequente correspondência com דָּבָר amplia os usos de matéria, coisa e acontecimento. No vocabulário cristão, designa ainda a palavra de Deus, a mensagem do Evangelho e, singularmente, ὁ Λόγος, a Palavra divina pessoal identificada com Jesus Cristo."
     }
   ]
 }

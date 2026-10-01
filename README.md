@@ -6,20 +6,20 @@ Versão local **v0.1**
 
 ## Sobre o projeto
 
-O GDHAGP é um projeto filológico e lexicográfico dedicado às línguas bíblicas, à Septuaginta, ao Novo Testamento e à literatura judaica e cristã antiga.
+O GDHAGP é um projeto filológico e lexicográfico dedicado às línguas bíblicas, ao grego antigo e helenístico, à Septuaginta, ao Novo Testamento e à literatura judaica e cristã antiga.
 
-Seu método distingue rigorosamente quatro camadas editoriais:
+O projeto distingue rigorosamente quatro camadas:
 
-1. **Fonte** — o que cada léxico ou documento efetivamente apresenta.
-2. **Tradução** — tradução literal ou controlada de cada fonte.
-3. **Análise** — estudo filológico, morfológico, histórico, textual, semântico e etimológico.
-4. **GDHAGP** — síntese editorial própria e independente.
+1. **Fonte** — reprodução documental do verbete da fonte.
+2. **Tradução** — tradução integral e controlada da fonte.
+3. **Análise** — investigação filológica e histórica.
+4. **GDHAGP** — síntese lexicográfica própria.
 
-As fontes lexicográficas permanecem separadas. BDAG, Lust–Eynikel–Hauspie, Robinson, Thayer e quaisquer obras futuras não devem ser fundidos silenciosamente.
+As fontes permanecem independentes.
 
 ---
 
-## Estrutura do projeto
+## Estrutura
 
 ```text
 GDHAGP-local/
@@ -30,5 +30,6 @@ GDHAGP-local/
 └── data/
     ├── project.js
     ├── sources.js
+    ├── source-texts.js
     ├── entries.js
     └── entries.json
