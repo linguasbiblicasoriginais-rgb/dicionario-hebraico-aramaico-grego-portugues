@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <meta
+        name="description"
+        content="GDHAGP — Grande Dicionário Hebraico–Aramaico–Grego–Português"
+    >
+
+    <meta name="color-scheme" content="light dark">
+
+    <title>
+        GDHAGP — Grande Dicionário Hebraico–Aramaico–Grego–Português
+    </title>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<a class="skip-link" href="#main">
+    Ir diretamente ao conteúdo
+</a>
+
+<header class="site-header">
+
+    <div class="header-left">
+
+        <button
+            id="menu-button"
+            class="round-button menu-button"
+            type="button"
+            aria-label="Abrir navegação"
+            aria-expanded="false"
+        >
+            ☰
+        </button>
+
+        <a class="brand" href="#inicio">
+
+            <span class="brand-abbreviation">
+                GDHAGP
+            </span>
+
+            <span class="brand-full">
+                Grande Dicionário Hebraico–Aramaico–Grego–Português
+            </span>
+
+        </a>
+
+    </div>
+
+    <div class="header-right">
+
+        <button
+            id="theme-button"
+            class="round-button"
+            type="button"
+            aria-label="Alternar tema claro e escuro"
+            title="Alternar tema"
+        >
+            ◐
+        </button>
+
+    </div>
+
+</header>
+
+<div class="site-layout">
+
+    <aside
+        id="sidebar"
+        class="sidebar"
+    >
+
+        <nav class="main-navigation">
+
+            <a href="#inicio" data-route="inicio">
+                Início
+            </a>
+
+            <a href="#busca" data-route="busca">
+                Busca
+            </a>
+
+            <a href="#grego" data-route="grego">
+                Grego
+            </a>
+
+            <a href="#hebraico" data-route="hebraico">
+                Hebraico
+            </a>
+
+            <a href="#aramaico" data-route="aramaico">
+                Aramaico
+            </a>
+
+            <a href="#fontes" data-route="fontes">
+                Fontes
+            </a>
+
+            <a href="#metodo" data-route="metodo">
+                Método
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+
+            <strong>
+                GDHAGP v0.1
+            </strong>
+
+            <span>
+                Edição local
+            </span>
+
+        </div>
+
+    </aside>
+
+    <main
+        id="main"
+        class="main-content"
+    >
+
+        <div id="app">
+
+            <noscript>
+
+                <section class="paper">
+
+                    <h1>
+                        JavaScript necessário
+                    </h1>
+
+                    <p>
+                        O GDHAGP funciona inteiramente no navegador,
+                        mas utiliza JavaScript local para navegação,
+                        pesquisa e apresentação dos verbetes.
+                    </p>
+
+                </section>
+
+            </noscript>
+
+        </div>
+
+    </main>
+
+</div>
+
+<footer class="site-footer">
+
+    <span>
+        GDHAGP — edição local
+    </span>
+
+    <span>
+        Fonte · Tradução · Análise · GDHAGP
+    </span>
+
+</footer>
+
+<script src="data/project.js"></script>
+<script src="data/sources.js"></script>
+<script src="data/entries.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

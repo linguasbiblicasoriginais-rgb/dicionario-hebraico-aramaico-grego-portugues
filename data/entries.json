@@ -1,0 +1,134 @@
+{
+  "entries": [
+    {
+      "id": "gr-logos",
+      "language": "grego",
+      "lemma": "λόγος",
+      "lexicalForm": "λόγος, -ου, ὁ",
+      "article": "ὁ",
+      "genitive": "λόγου",
+      "transliteration": "lógos",
+      "partOfSpeech": "substantivo",
+      "gender": "masculino",
+      "declension": "segunda declinação",
+      "stem": "λογο-",
+      "status": "verbete em elaboração",
+      "varieties": [
+        "grego antigo",
+        "grego helenístico",
+        "koiné",
+        "Septuaginta",
+        "Novo Testamento",
+        "literatura cristã antiga"
+      ],
+      "corpora": [
+        "Septuaginta",
+        "Novo Testamento",
+        "literatura judaico-helenística",
+        "literatura cristã antiga"
+      ],
+      "principalSemiticCorrespondence": "דָּבָר",
+      "basicTranslation": "palavra",
+      "traditionalSpecialTranslation": "Verbo",
+      "shortSummary": "palavra, expressão, declaração, fala, discurso, mensagem, relato; assunto, matéria; razão, fundamento; conta, prestação de contas; em uso cristológico, o Logos, a Palavra divina pessoal.",
+      "definitions": [
+        {
+          "number": 1,
+          "title": "palavra; expressão verbal; enunciado",
+          "definition": "Unidade de expressão verbal, oral ou escrita, pela qual se comunica determinado conteúdo."
+        },
+        {
+          "number": 2,
+          "title": "dito; declaração; afirmação; pronunciamento",
+          "definition": "Conteúdo verbal individualmente formulado ou proferido por alguém."
+        },
+        {
+          "number": 3,
+          "title": "fala; discurso; conversação",
+          "definition": "Expressão verbal considerada como ato mais amplo e contínuo de fala ou interação discursiva."
+        },
+        {
+          "number": 4,
+          "title": "mensagem; comunicação; notícia; relato",
+          "definition": "Informação transmitida de uma pessoa ou grupo a outro."
+        },
+        {
+          "number": 5,
+          "title": "ensino; instrução; pregação; proclamação",
+          "definition": "Conteúdo discursivo transmitido com finalidade didática, religiosa ou proclamativa."
+        },
+        {
+          "number": 6,
+          "title": "ordem; mandamento; determinação",
+          "definition": "Palavra dotada de força diretiva, pela qual se ordena ou determina uma ação."
+        },
+        {
+          "number": 7,
+          "title": "promessa; palavra empenhada; condição",
+          "definition": "Declaração pela qual se assume um compromisso, se estabelece uma condição ou se promete algo."
+        },
+        {
+          "number": 8,
+          "title": "relato; narrativa; texto; tratado; composição discursiva",
+          "definition": "Discurso organizado considerado como composição literária ou exposição desenvolvida."
+        },
+        {
+          "number": 9,
+          "title": "assunto; matéria; questão; caso",
+          "definition": "Conteúdo, questão ou objeto a respeito do qual se fala, delibera ou investiga."
+        },
+        {
+          "number": 10,
+          "title": "acontecimento; fato",
+          "definition": "Coisa que ocorreu; acontecimento considerado como objeto de relato ou consideração."
+        },
+        {
+          "number": 11,
+          "title": "consideração; reflexão",
+          "definition": "Ato ou objeto de consideração mental; aquilo que é levado em conta."
+        },
+        {
+          "number": 12,
+          "title": "razão; fundamento; motivo; causa",
+          "definition": "Fundamento racional ou causal pelo qual algo ocorre, é afirmado ou justificado."
+        },
+        {
+          "number": 13,
+          "title": "cálculo; conta; cômputo",
+          "definition": "Operação ou resultado de contar, calcular ou registrar quantitativamente alguma coisa."
+        },
+        {
+          "number": 14,
+          "title": "prestação de contas",
+          "definition": "Ato de apresentar conta formal de atos, responsabilidades ou administração."
+        },
+        {
+          "number": 15,
+          "title": "explicação; justificativa; defesa racional",
+          "definition": "Exposição das razões ou fundamentos pelos quais alguém explica, justifica ou responde por determinada posição ou ação."
+        },
+        {
+          "number": 16,
+          "title": "conta; registro financeiro; operação contábil",
+          "definition": "Registro ou relação financeira de valores, débitos, créditos, receitas ou responsabilidades."
+        },
+        {
+          "number": 17,
+          "title": "palavra de Deus; mensagem, ordem, promessa ou revelação divina",
+          "definition": "Comunicação procedente de Deus, seja como mandamento, promessa, revelação, Escritura ou mensagem divina."
+        },
+        {
+          "number": 18,
+          "title": "mensagem cristã; Evangelho; proclamação acerca de Cristo",
+          "definition": "Mensagem cristã proclamada pelos apóstolos e demais pregadores acerca de Cristo, da salvação e do Reino de Deus."
+        },
+        {
+          "number": 19,
+          "title": "ὁ Λόγος — o Logos, a Palavra divina pessoal",
+          "definition": "Título pessoal aplicado a Jesus Cristo como a Palavra divina eterna que estava com Deus, era Deus e se fez carne."
+        }
+      ],
+      "finalSummary": "λόγος possui como centro histórico a esfera da expressão e formulação, mas desenvolve uma rede semântica muito ampla. Pode designar desde uma simples palavra ou declaração até discurso, mensagem, relato, ensino, ordem, promessa, texto, assunto e acontecimento; em outro domínio, pode significar consideração, razão, fundamento, cálculo, conta, prestação de contas e registro financeiro. No grego bíblico, especialmente na Septuaginta, sua correspondência frequente com דָּבָר amplia sensivelmente os usos referentes a coisa, matéria e acontecimento. No vocabulário cristão, pode designar a palavra de Deus ou a mensagem do Evangelho e, de modo singular, ὁ Λόγος, a Palavra divina pessoal identificada com Jesus Cristo."
+    }
+  ]
+}
